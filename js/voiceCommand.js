@@ -29,10 +29,10 @@ if (!voiceCommandButton || !voiceStatus || !entryForm || !titleInput || !dateInp
         }
     });
 }
-entryForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    fillAndSubmitEntryForm(titleInput.value, dateInput.value);
-});
+// entryForm.addEventListener('submit', (e) => {
+//     e.preventDefault();
+//     fillAndSubmitEntryForm(titleInput.value, dateInput.value);
+// });
 
 function startWakeWordListening() {
     voiceStatus.textContent = 'Listening for wake word: "Har Mahadev"...';
