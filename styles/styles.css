@@ -1,0 +1,144 @@
+/* styles.css - Styles for login, registration, dashboard pages */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f7f9fc;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 480px;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+h1, h2 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 0.25rem;
+    font-weight: bold;
+    margin-top: 1rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus {
+    border-color: #2980b9;
+    outline: none;
+}
+
+button[type="submit"],
+button#voiceCommandButton,
+.logout-button {
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    background: #2980b9;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    display: inline-block;
+    user-select: none;
+}
+
+button[type="submit"]:hover,
+button#voiceCommandButton:hover,
+.logout-button:hover {
+    background: #1c5980;
+}
+
+.error-message {
+    background-color: #ffe6e6;
+    color: #b30000;
+    border: 1px solid #b30000;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.success-message {
+    background-color: #e6ffe6;
+    color: #006600;
+    border: 1px solid #006600;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+}
+
+.input-error {
+    color: #b30000;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    min-height: 1em;
+}
+
+nav {
+    text-align: right;
+    margin-bottom: 1rem;
+}
+
+.logout-button {
+    background: #c0392b;
+}
+
+.logout-button:hover {
+    background: #7a2018;
+}
+
+ul#entriesList {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+ul#entriesList li {
+    background: #ecf0f1;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 500px) {
+    .container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+}
