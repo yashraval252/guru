@@ -321,6 +321,25 @@ a:hover {
 }
 
 
+/* Scrollable recent entries wrapper */
+
+.entries-list-wrapper {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 8px;
+    /* avoid content under scrollbar */
+}
+
+.entries-list-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.entries-list-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.2);
+    border-radius: 6px;
+}
+
+
 /* Voice button */
 
 .btn-voice {

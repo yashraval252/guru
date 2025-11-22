@@ -44,5 +44,27 @@ function initializeCalendar() {
         }
     });
 
+    // expose the instance for other scripts
+    try {
+        window.APP_CALENDAR = calendar;
+    } catch (e) {
+        console.warn('Could not attach calendar to window', e);
+    }
+
     calendar.render();
 }
+
+// expose calendar so other scripts can add/remove events dynamically
+window.APP_CALENDAR = window.APP_CALENDAR || null;
+document.addEventListener('DOMContentLoaded', function() {
+    // set reference after initializeCalendar runs
+    const trySet = () => {
+        const el = document.getElementById('calendar');
+        if (!el) return;
+        // if calendar instance exists in FullCalendar globals, find it
+        if (window.FullCalendar) {
+            // we stored calendar in closure; easiest is to find via dataset, but we will set when rendering
+        }
+    };
+    // no-op; actual instance is attached inside initializeCalendar by replacing this module if needed
+});

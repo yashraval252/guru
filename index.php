@@ -64,7 +64,13 @@ if (isset($_SESSION['register_success'])) {
                         <?php endif; ?>
 
                         <!-- Login Form -->
+                        <?php $recaptchaSiteKey = $_ENV['RECAPTCHA_SITE_KEY'] ?? ''; ?>
+                        <?php if ($recaptchaSiteKey): ?>
+                            <script src="https://www.google.com/recaptcha/api.js?render=<?=htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8')?>"></script>
+                        <?php endif; ?>
+
                         <form id="loginForm" action="auth/login.php" method="POST" novalidate>
+                            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response-login" />
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" class="form-control" id="email" name="email" required autocomplete="email" placeholder="Enter your email" />
@@ -79,6 +85,34 @@ if (isset($_SESSION['register_success'])) {
 
                             <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
                         </form>
+
+                        <?php if ($recaptchaSiteKey): ?>
+                        <script>
+                        (function(){
+                            const form = document.getElementById('loginForm');
+                            const tokenInput = document.getElementById('g-recaptcha-response-login');
+                            if (!form) return;
+
+                            form.addEventListener('submit', function(e){
+                                // If token already present, allow submit to continue (validation may run)
+                                if (tokenInput && tokenInput.value) return;
+                                e.preventDefault();
+                                grecaptcha.ready(function(){
+                                    grecaptcha.execute('<?=htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8')?>', {action: 'login'})
+                                    .then(function(token){
+                                        if (tokenInput) tokenInput.value = token;
+                                        // re-submit allowing other handlers (use requestSubmit if available)
+                                        if (typeof form.requestSubmit === 'function') {
+                                            form.requestSubmit();
+                                        } else {
+                                            form.submit();
+                                        }
+                                    });
+                                });
+                            });
+                        })();
+                        </script>
+                        <?php endif; ?>
 
                         <hr class="my-4" />
 

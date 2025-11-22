@@ -108,21 +108,33 @@ try {
                         <h5 class="mb-0">Recent Entries</h5>
                     </div>
                     <div class="card-body">
+                        <!-- Date filter -->
+                        <div class="mb-3 d-flex align-items-center gap-2">
+                            <label for="filterDate" class="form-label mb-0">Filter by date</label>
+                            <input type="date" id="filterDate" class="form-control form-control-sm" />
+                            <button id="clearFilter" class="btn btn-sm btn-secondary">Clear</button>
+                        </div>
+
                         <?php if (empty($recentEntries)): ?>
                             <p class="text-muted mb-0">No entries found. Start by creating your first entry!</p>
                         <?php else: ?>
-                            <ul class="entries-list" id="entriesList" aria-live="polite">
-                                <?php foreach ($recentEntries as $entry): ?>
-                                    <li class="entry-item">
-                                        <div>
-                                            <p class="entry-title"><?=htmlspecialchars($entry['title'], ENT_QUOTES, 'UTF-8')?></p>
-                                            <time class="entry-date" datetime="<?=htmlspecialchars($entry['date'], ENT_QUOTES, 'UTF-8')?>">
-                                                <?=date('M d, Y', strtotime($entry['date']))?>
-                                            </time>
-                                        </div>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
+                            <div class="entries-list-wrapper" style="max-height:360px; overflow-y:auto;">
+                                <ul class="entries-list" id="entriesList" aria-live="polite">
+                                    <?php foreach ($recentEntries as $entry): ?>
+                                        <li class="entry-item" data-entry-id="<?=htmlspecialchars((string)$entry['id'], ENT_QUOTES, 'UTF-8')?>" data-entry-date="<?=htmlspecialchars($entry['date'], ENT_QUOTES, 'UTF-8')?>">
+                                            <div>
+                                                <p class="entry-title"><?=htmlspecialchars($entry['title'], ENT_QUOTES, 'UTF-8')?></p>
+                                                <time class="entry-date" datetime="<?=htmlspecialchars($entry['date'], ENT_QUOTES, 'UTF-8')?>">
+                                                    <?=date('M d, Y', strtotime($entry['date']))?>
+                                                </time>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-sm btn-outline-danger delete-entry" data-entry-id="<?=htmlspecialchars((string)$entry['id'], ENT_QUOTES, 'UTF-8')?>" aria-label="Delete entry">Delete</button>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>

@@ -75,9 +75,17 @@ if ($method === 'POST') {
         exit();
     }
 } elseif ($method === 'GET') {
+    // Optional date filter: ?date=YYYY-MM-DD
+    $filterDate = isset($_GET['date']) ? trim((string)$_GET['date']) : '';
+
     try {
-        $stmt = $db->prepare('SELECT id, title, date FROM entries WHERE user_id = :user_id ORDER BY date DESC, id DESC');
-        $stmt->execute(['user_id' => $userId]);
+        if ($filterDate !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
+            $stmt = $db->prepare('SELECT id, title, date FROM entries WHERE user_id = :user_id AND date = :date ORDER BY date DESC, id DESC');
+            $stmt->execute(['user_id' => $userId, 'date' => $filterDate]);
+        } else {
+            $stmt = $db->prepare('SELECT id, title, date FROM entries WHERE user_id = :user_id ORDER BY date DESC, id DESC');
+            $stmt->execute(['user_id' => $userId]);
+        }
         $entries = $stmt->fetchAll();
 
         echo json_encode(['entries' => $entries]);
@@ -89,6 +97,49 @@ if ($method === 'POST') {
         echo json_encode(['error' => 'Failed to fetch entries.']);
         exit();
     }
+
+} elseif ($method === 'DELETE') {
+    // Delete an entry by id. Accept id as query parameter or JSON body.
+    $id = null;
+    if (isset($_GET['id'])) {
+        $id = (int)$_GET['id'];
+    } else {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (is_array($input) && isset($input['id'])) {
+            $id = (int)$input['id'];
+        }
+    }
+
+    if (empty($id)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing entry id']);
+        exit();
+    }
+
+    try {
+        // Ensure the entry belongs to the current user
+        $check = $db->prepare('SELECT id FROM entries WHERE id = :id AND user_id = :user_id');
+        $check->execute(['id' => $id, 'user_id' => $userId]);
+        $found = $check->fetch();
+        if (!$found) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Entry not found']);
+            exit();
+        }
+
+        $del = $db->prepare('DELETE FROM entries WHERE id = :id AND user_id = :user_id');
+        $del->execute(['id' => $id, 'user_id' => $userId]);
+
+        echo json_encode(['success' => true, 'id' => $id]);
+        exit();
+
+    } catch (Exception $e) {
+        error_log('Failed to delete entry: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to delete entry.']);
+        exit();
+    }
+
 } else {
     http_response_code(405);
     echo json_encode(['error' => 'Method Not Allowed']);

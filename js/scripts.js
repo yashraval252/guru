@@ -124,18 +124,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Reset form
                 entryForm.reset();
 
-                // Set today's date again
-                dateInput.value = `${year}-${month}-${day}`;
+                // Set today's date again (recompute to avoid scope issues)
+                if (dateInput) {
+                    const t = new Date();
+                    const y = t.getFullYear();
+                    const m = String(t.getMonth() + 1).padStart(2, '0');
+                    const d = String(t.getDate()).padStart(2, '0');
+                    dateInput.value = `${y}-${m}-${d}`;
+                }
 
                 // Add success message
-                showSuccessMessage('Entry added successfully! Refresh to see it in the calendar.');
+                showSuccessMessage('Entry added successfully!');
 
-                // Refresh calendar if available
-                if (window.location.pathname.includes('dashboard')) {
-                    // Reload the page to show new entry
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+                // If calendar is available, add event dynamically
+                try {
+                    if (window.APP_CALENDAR && typeof window.APP_CALENDAR.addEvent === 'function') {
+                        window.APP_CALENDAR.addEvent({
+                            id: String(data.entry.id),
+                            title: data.entry.title,
+                            start: data.entry.date,
+                            allDay: true,
+                            backgroundColor: '#6366f1',
+                            borderColor: '#4f46e5'
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Could not add event to calendar dynamically', err);
+                }
+
+                // Prepend to recent entries list if present
+                const entriesList = document.getElementById('entriesList');
+                if (entriesList) {
+                    const li = renderEntryItem(data.entry);
+                    // Prepend inside UL
+                    entriesList.insertBefore(li, entriesList.firstChild);
                 }
 
             } catch (error) {
@@ -200,5 +222,113 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
+    }
+
+    // Render a single entry list item (used when adding dynamically)
+    function renderEntryItem(entry) {
+        const li = document.createElement('li');
+        li.className = 'entry-item';
+        li.setAttribute('data-entry-id', String(entry.id));
+        li.setAttribute('data-entry-date', entry.date);
+
+        const left = document.createElement('div');
+        const title = document.createElement('p');
+        title.className = 'entry-title';
+        title.textContent = entry.title;
+        const time = document.createElement('time');
+        time.className = 'entry-date';
+        time.setAttribute('datetime', entry.date);
+        const dt = new Date(entry.date + 'T00:00:00');
+        time.textContent = dt.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' });
+        left.appendChild(title);
+        left.appendChild(time);
+
+        const right = document.createElement('div');
+        const del = document.createElement('button');
+        del.className = 'btn btn-sm btn-outline-danger delete-entry';
+        del.setAttribute('data-entry-id', String(entry.id));
+        del.setAttribute('aria-label', 'Delete entry');
+        del.textContent = 'Delete';
+        right.appendChild(del);
+
+        li.appendChild(left);
+        li.appendChild(right);
+
+        return li;
+    }
+
+    // Global event delegation for delete buttons (works even if list is added later)
+    document.addEventListener('click', async(ev) => {
+        const btn = ev.target.closest && ev.target.closest('.delete-entry');
+        if (!btn) return;
+        const id = btn.getAttribute('data-entry-id');
+        if (!id) return;
+
+        if (!confirm('Delete this entry?')) return;
+
+        try {
+            const res = await fetch('api/entries.php?id=' + encodeURIComponent(id), {
+                method: 'DELETE'
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                throw new Error(json.error || 'Failed to delete');
+            }
+
+            // Remove list item
+            const li = document.querySelector('li[data-entry-id="' + id + '"]');
+            if (li) li.remove();
+
+            // Remove from calendar if present
+            try {
+                if (window.APP_CALENDAR && typeof window.APP_CALENDAR.getEventById === 'function') {
+                    const evObj = window.APP_CALENDAR.getEventById(String(id));
+                    if (evObj) evObj.remove();
+                }
+            } catch (err) {
+                console.warn('Could not remove event from calendar', err);
+            }
+
+        } catch (err) {
+            console.error('Delete failed', err);
+            showErrorMessage('Failed to delete entry.');
+        }
+    });
+
+    // Date filter handling
+    const filterDateInput = document.getElementById('filterDate');
+    const clearFilterBtn = document.getElementById('clearFilter');
+    if (filterDateInput) {
+        filterDateInput.addEventListener('change', () => {
+            const val = filterDateInput.value;
+            filterEntriesByDate(val);
+        });
+    }
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (filterDateInput) {
+                filterDateInput.value = '';
+            }
+            filterEntriesByDate('');
+        });
+    }
+
+    function filterEntriesByDate(dateStr) {
+        const entriesListEl = document.getElementById('entriesList');
+        if (!entriesListEl) return;
+        const items = Array.from(entriesListEl.querySelectorAll('li.entry-item'));
+        if (!dateStr) {
+            items.forEach(i => i.style.display = 'flex');
+            return;
+        }
+        items.forEach(i => {
+            const d = i.getAttribute('data-entry-date');
+            if (d === dateStr) {
+                i.style.display = 'flex';
+            } else {
+                i.style.display = 'none';
+            }
+        });
     }
 });

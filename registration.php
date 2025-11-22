@@ -48,7 +48,13 @@ unset($_SESSION['register_errors'], $_SESSION['register_old']);
                         <?php endif; ?>
 
                         <!-- Registration Form -->
+                        <?php $recaptchaSiteKey = $_ENV['RECAPTCHA_SITE_KEY'] ?? ''; ?>
+                        <?php if ($recaptchaSiteKey): ?>
+                            <script src="https://www.google.com/recaptcha/api.js?render=<?=htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8')?>"></script>
+                        <?php endif; ?>
+
                         <form id="registerForm" action="auth/register.php" method="POST" novalidate>
+                            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response-register" />
                             <div class="mb-3">
                                 <label for="name" class="form-label">Full Name</label>
                                 <input type="text" class="form-control" id="name" name="name" required minlength="2" maxlength="100" placeholder="Enter your full name" value="<?=htmlspecialchars($old['name'] ?? '', ENT_QUOTES, 'UTF-8')?>" />
@@ -76,6 +82,33 @@ unset($_SESSION['register_errors'], $_SESSION['register_old']);
 
                             <button type="submit" class="btn btn-primary w-100 py-2">Create Account</button>
                         </form>
+
+                        <?php if ($recaptchaSiteKey): ?>
+                        <script>
+                        (function(){
+                            const form = document.getElementById('registerForm');
+                            const tokenInput = document.getElementById('g-recaptcha-response-register');
+                            if (!form) return;
+
+                            form.addEventListener('submit', function(e){
+                                // If token already present, allow submit to continue (validation may run)
+                                if (tokenInput && tokenInput.value) return;
+                                e.preventDefault();
+                                grecaptcha.ready(function(){
+                                    grecaptcha.execute('<?=htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8')?>', {action: 'register'})
+                                    .then(function(token){
+                                        if (tokenInput) tokenInput.value = token;
+                                        if (typeof form.requestSubmit === 'function') {
+                                            form.requestSubmit();
+                                        } else {
+                                            form.submit();
+                                        }
+                                    });
+                                });
+                            });
+                        })();
+                        </script>
+                        <?php endif; ?>
 
                         <hr class="my-4" />
 
