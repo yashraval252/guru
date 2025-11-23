@@ -1,0 +1,83 @@
+##############################################
+# .htaccess - Security & hardening defaults
+# Generated for: gurudevdutt.infinityfree.me
+##############################################
+
+# Disable directory listing
+Options -Indexes
+
+# Prevent access to sensitive files
+<FilesMatch "^(?:\.env|\.env\.local|composer\.json|composer\.lock|package\.json|package-lock\.json|README|README\.md)$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to dotfiles and git
+<FilesMatch "^\.(?!well-known).*">
+    Require all denied
+</FilesMatch>
+
+# Deny access to certain directories (vendor, tests, .git)
+RewriteEngine On
+RewriteRule ^(?:vendor|tests|\.git)(?:/|$) - [F,L,NC]
+
+# Block unsafe HTTP methods
+RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+RewriteRule .* - [F]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "no-referrer-when-downgrade"
+    Header always set Permissions-Policy "geolocation=(), microphone=()"
+
+    # Content Security Policy - adjust as needed for third-party services
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https://www.google.com https://www.gstatic.com https://errors.infinityfree.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com; frame-src https://www.google.com; base-uri 'self'"
+
+    # HSTS - only applies when HTTPS is used on the host
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
+</IfModule>
+
+# Prevent access to this file via HTTP
+<Files ".htaccess">
+    Require all denied
+</Files>
+
+# PHP settings (if mod_php available)
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value session.cookie_httponly 1
+    php_value session.use_only_cookies 1
+    php_value session.cookie_secure 1
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value session.cookie_httponly 1
+    php_value session.use_only_cookies 1
+    php_value session.cookie_secure 1
+</IfModule>
+
+# Caching for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/* "access plus 1 month"
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+# Basic protection for API endpoints - return 405 for unknown methods if not handled by PHP
+<IfModule mod_rewrite.c>
+    # If request maps to a PHP file in /api and method is not GET/POST/DELETE/PUT, block it
+    RewriteCond %{REQUEST_URI} ^/api/ [NC]
+    RewriteCond %{REQUEST_METHOD} !^(GET|POST|PUT|DELETE|OPTIONS)$ [NC]
+    RewriteRule .* - [R=405,L]
+</IfModule>
+
+# Reduce information leakage
+ServerSignature Off
+
+# End of .htaccess
